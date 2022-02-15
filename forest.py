@@ -65,7 +65,36 @@ def get_ecs_clusters(ecs):
 					print_leaves(our_tasks, 3)
 			else:
 				for task in response:
-					print_leaves(task, 2)
+					our_task =  f"task: {task.split('/')[-2]}"
+					print_leaves(our_task, 3)
+
+def get_albs(alb):
+	response = alb.describe_load_balancers()
+	for lb in response['LoadBalancers']:
+		if args.verbose:
+			listeners = alb.describe_listeners(LoadBalancerArn=lb['LoadBalancerArn'])
+			our_listeners = []
+			for l in listeners['Listeners']:
+				our_details = ['listener:', l['Protocol'], str(l['Port'])]
+				our_listeners.append(' '.join(our_details))
+			tgs = alb.describe_target_groups(LoadBalancerArn=lb['LoadBalancerArn'])
+			our_tgs = []
+			for tg in tgs['TargetGroups']:
+				tghealth = alb.describe_target_health(TargetGroupArn=tg['TargetGroupArn']).get('TargetHealthDescriptions')
+				our_health = tghealth[0]['TargetHealth']['State']
+				our_details = ['targetgroup:', tg['TargetGroupName'], tg['Protocol'], str(tg['Port']), tg['HealthCheckProtocol'], str(tg['HealthCheckPort']), str(tg['HealthCheckEnabled']), tg['TargetType'], our_health]
+				our_tgs.append(' '.join(our_details))
+			our_azs = []
+			for az in lb['AvailabilityZones']:
+				our_azs.append(az['ZoneName'])
+			our_details = [lb['LoadBalancerName'], ' '.join(our_azs), lb['DNSName']]
+			our_lb = ' '.join(our_details)
+			print_leaves(our_lb)
+			print_leaves(our_listeners, 2)
+			print_leaves(our_tgs, 2)
+		else:
+			print_leaves(lb['LoadBalancerName'])
+
 
 def get_vpcs(ec2):
 	vpcs = ec2.describe_vpcs().get("Vpcs")
@@ -134,12 +163,9 @@ elif args.layer == "ips":
 			print_leaves(our_addresses)
 elif args.layer == "lbs":
 	for region in our_regions:
-		elbs = boto3.client('elb', region_name=region)
-		response = elbs.describe_load_balancers()
-		print(response)
+		print(region)
 		albs = boto3.client('elbv2', region_name=region)
-		response = albs.describe_load_balancers()
-		print(response)
+		get_albs(albs)
 elif args.layer == "network":
 	for region in our_regions:
 		ec2 = boto3.client('ec2', region_name=region)
