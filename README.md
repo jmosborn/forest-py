@@ -23,9 +23,9 @@ A read-only DevOps tools for AWS account auditing and resource discovery. Origin
 
 If an AWS infrastructure is a forest filled with trees, the forest layers are higher-level conceptual organizations of the resources for common purposes and architectures. The following layers are currently supported:
 
-- instances		List all instances
-- lbs			Show load balancers, listeners, and target groups
-- ecs			Show the ECS infrastructure including clusters, services, and tasks
+| instances | List all instances |
+| lbs | Show load balancers, listeners, and target groups |
+| ecs | Show the ECS infrastructure including clusters, services, and tasks |
 
 ## Authentication
 
