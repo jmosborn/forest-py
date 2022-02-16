@@ -10,13 +10,21 @@ A read-only DevOps tools for AWS account auditing and resource discovery. Origin
 
 ## Options
 
--a/--all-regions		Show resources in all regions, rather than just the default
+-a/--all-regions
 
--i/--all-instances		Show all instances, rather than the default of only running instances
+	Show resources in all regions, rather than just the default
 
--t/--total				Show totals rather than individual resources
+-i/--all-instances
 
--v						Shows more details about resources, rather than just listening their names
+	Show all instances, rather than the default of only running instances
+
+-t/--total
+
+	Show totals rather than individual resources
+
+-v
+
+	Shows more details about resources, rather than just listening their names
 
 
 ## Layers
