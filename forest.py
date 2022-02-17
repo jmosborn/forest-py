@@ -174,7 +174,12 @@ elif args.layer == "network":
 			print(region, '\t\t', vpcs)
 		else:
 			print(region)
-			print_leaves(vpcs)
+			ec2r = boto3.resource('ec2')
+			for vpc in vpcs:
+				print_leaves(vpc)
+				for subnet in ec2.describe_subnets(Filters=[{"Name": "vpc-id", "Values": [vpc]}]).get("Subnets"):
+					our_subnet = f"{subnet['SubnetId']} ({subnet['AvailabilityZone']})"
+					print_leaves(our_subnet, 2)
 elif args.layer == "ecs":
 	for region in our_regions:
 		print(region)
