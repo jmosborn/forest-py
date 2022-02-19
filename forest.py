@@ -150,6 +150,10 @@ def print_leaves(leaves, level = 1):
 		else:
 			print(spacing, leaves)
 
+def print_banner(title):
+	banner = f"---------- {title} ----------"
+	print(banner)
+
 args = get_args()
 
 ec2 = boto3.client('ec2')
@@ -168,6 +172,7 @@ else:
 	our_regions.append(ec2.meta.region_name)
 
 if args.layer == "instances":
+	print_banner("Instances")
 	for region in our_regions:
 		ec2 = boto3.client('ec2', region_name=region)
 		instances = get_instances(ec2)
@@ -178,20 +183,24 @@ if args.layer == "instances":
 			print_leaves(instances)
 			
 elif args.layer == "ips":
+	print_banner("IPs")
 	for region in our_regions:
 		ec2 = boto3.client('ec2', region_name=region)
 		get_ips(ec2)
 elif args.layer == "lbs":
+	print_banner("Load Balancers")
 	for region in our_regions:
 		print(region)
 		albs = boto3.client('elbv2', region_name=region)
 		get_albs(albs)
 elif args.layer == "redis":
+	print_banner("Redis")
 	for region in our_regions:
 		print(region)
 		ecache = boto3.client('elasticache')
 		get_redis(ecache)
 elif args.layer == "network":
+	print_banner("Network")
 	for region in our_regions:
 		ec2 = boto3.client('ec2', region_name=region)
 		vpcs = get_vpcs(ec2)
@@ -206,6 +215,7 @@ elif args.layer == "network":
 					our_subnet = f"{subnet['SubnetId']} ({subnet['AvailabilityZone']})"
 					print_leaves(our_subnet, 2)
 elif args.layer == "ecs":
+	print_banner("ECS")
 	for region in our_regions:
 		print(region)
 		ecs = boto3.client('ecs', region_name=region)
