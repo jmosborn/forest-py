@@ -35,8 +35,10 @@ If an AWS infrastructure is a forest filled with trees, the forest layers are hi
 | ----- | ----- |
 | network | Show a network layout by vpc and subnet |
 | instances | List all instances |
+| ips | List all IPs |
 | lbs | Show load balancers, listeners, and target groups |
 | ecs | Show the ECS infrastructure including clusters, services, and tasks |
+| redis | Show elasticache redis clusters and nodes |
 
 ## Authentication
 

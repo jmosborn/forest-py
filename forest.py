@@ -6,7 +6,7 @@ import argparse
 def get_args():
 	description='A DevSecOps tool for cloud auditing and resource discovery'
 	parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
-	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\ninstances\nnetwork\nips\necs\nlbs')
+	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis')
 	parser.add_argument('-v', dest='verbose', action='store_true', help='show more details for resources')
 	parser.add_argument('--all-regions', '-a', dest='all_regions', action='store_true', help='show all regions')
 	parser.add_argument('--all-instances', '-i', dest='all_instances', action='store_true', help='show all instances')
@@ -95,6 +95,21 @@ def get_albs(alb):
 		else:
 			print_leaves(lb['LoadBalancerName'])
 
+def get_redis(ecache):
+	response = ecache.describe_cache_clusters()
+	#our_clusters = []
+	for cluster in response['CacheClusters']:
+		if args.verbose:
+			our_details = [cluster['CacheClusterId'], cluster['CacheNodeType'], cluster['Engine'], cluster['CacheClusterStatus'], str(cluster['NumCacheNodes']), cluster['CacheSubnetGroupName'], cluster['ReplicationGroupId'], cluster['PreferredAvailabilityZone']]
+			our_cluster = ' '.join(our_details)
+		else:
+			our_cluster = cluster['CacheClusterId']
+		print_leaves(our_cluster)
+		if cluster.get('CacheNodes'):
+			our_nodes = []
+			for node in cluster['CacheNodes']:
+				our_nodes.append(node['CacheNodeId'])
+			print_leaves(our_nodes)
 
 def get_vpcs(ec2):
 	vpcs = ec2.describe_vpcs().get("Vpcs")
@@ -105,6 +120,20 @@ def get_vpcs(ec2):
 		for vpc in vpcs:
 			our_vpcs.append(vpc['VpcId'])
 		return our_vpcs
+
+def get_ips(ec2):
+	response = ec2.describe_addresses()
+	our_addresses = []
+	for address in response.get('Addresses'):
+		if args.verbose:
+			our_addresses.append(' '.join([address['PublicIp'], address['PrivateIpAddress'], address['InstanceId'], address['AllocationId'], address['AssociationId']]))
+		else:
+			our_addresses.append(address['PublicIp'])
+	if args.total:
+		print(region, '\t\t', len(our_addresses))
+	else:
+		print(region)
+		print_leaves(our_addresses)
 
 def print_leaves(leaves, level = 1):
 	if leaves:
@@ -150,22 +179,18 @@ if args.layer == "instances":
 			
 elif args.layer == "ips":
 	for region in our_regions:
-		#print(region)
 		ec2 = boto3.client('ec2', region_name=region)
-		response = ec2.describe_addresses().get("Addresses")
-		our_addresses = []
-		for address in response:
-			our_addresses.append(response("PublicIp"))
-		if args.total:
-			print(region, '\t\t', len(our_addresses))
-		else:
-			print(region)
-			print_leaves(our_addresses)
+		get_ips(ec2)
 elif args.layer == "lbs":
 	for region in our_regions:
 		print(region)
 		albs = boto3.client('elbv2', region_name=region)
 		get_albs(albs)
+elif args.layer == "redis":
+	for region in our_regions:
+		print(region)
+		ecache = boto3.client('elasticache')
+		get_redis(ecache)
 elif args.layer == "network":
 	for region in our_regions:
 		ec2 = boto3.client('ec2', region_name=region)
