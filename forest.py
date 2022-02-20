@@ -96,20 +96,35 @@ def get_albs(alb):
 			print_leaves(lb['LoadBalancerName'])
 
 def get_redis(ecache):
-	response = ecache.describe_cache_clusters()
+	response = ecache.describe_replication_groups()
 	#our_clusters = []
-	for cluster in response['CacheClusters']:
+	for group in response['ReplicationGroups']:
 		if args.verbose:
-			our_details = [cluster['CacheClusterId'], cluster['CacheNodeType'], cluster['Engine'], cluster['CacheClusterStatus'], str(cluster['NumCacheNodes']), cluster['CacheSubnetGroupName'], cluster['ReplicationGroupId'], cluster['PreferredAvailabilityZone']]
-			our_cluster = ' '.join(our_details)
+			our_group = ' '.join([group['ReplicationGroupId'], group['Status'], f"auto-failover:{group['AutomaticFailover']}", f"multi-az:{group['MultiAZ']}", f"cluster:{group['ClusterEnabled']}", f"{group['ConfigurationEndpoint']['Address']}:{group['ConfigurationEndpoint']['Port']}"])
 		else:
-			our_cluster = cluster['CacheClusterId']
-		print_leaves(our_cluster)
-		if cluster.get('CacheNodes'):
-			our_nodes = []
-			for node in cluster['CacheNodes']:
-				our_nodes.append(node['CacheNodeId'])
-			print_leaves(our_nodes)
+			our_group = group['ReplicationGroupId']
+		print_leaves(our_group)
+		clusters = group['MemberClusters']
+		our_clusters = []
+		for c in clusters:
+			cluster = ecache.describe_cache_clusters(CacheClusterId=c).get('CacheClusters')[0]
+			if args.verbose:
+				our_details = [cluster['CacheClusterId'], cluster['CacheNodeType'], cluster['Engine'], cluster['CacheClusterStatus'], str(cluster['NumCacheNodes']), cluster['CacheSubnetGroupName'], cluster['ReplicationGroupId'], cluster['PreferredAvailabilityZone']]
+			else:
+				our_details = [cluster['CacheClusterId']]
+			our_cluster = ' '.join(our_details)
+			our_clusters.append(our_cluster)
+		print_leaves(our_clusters, 2)
+		nodegroups = group['NodeGroups']
+		if args.verbose:
+			for n in nodegroups:
+				our_nodegroup = ' '.join([n['NodeGroupId'], n['Status'], n['Slots']])
+				print_leaves(our_nodegroup, 2)
+			if cluster.get('CacheNodes'):
+				our_nodes = []
+				for node in cluster['CacheNodes']:
+					our_nodes.append(node['CacheNodeId'])
+				print_leaves(our_nodes)
 
 def get_vpcs(ec2):
 	vpcs = ec2.describe_vpcs().get("Vpcs")
