@@ -8,25 +8,6 @@ A read-only DevOps tools for AWS account auditing and resource discovery. Origin
 
 `forest.py -h`
 
-## Options
-
--a/--all-regions
-
-	Show resources in all regions, rather than just the default
-
--i/--all-instances
-
-	Show all instances, rather than the default of only running instances
-
--t/--total
-
-	Show totals rather than individual resources
-
--v
-
-	Shows more details about resources, rather than just listening their names
-
-
 ## Layers
 
 If an AWS infrastructure is a forest filled with trees, the forest layers are higher-level conceptual organizations of the resources for common purposes and architectures. The following layers are currently supported:
@@ -39,6 +20,24 @@ If an AWS infrastructure is a forest filled with trees, the forest layers are hi
 | lbs | Show load balancers, listeners, and target groups |
 | ecs | Show the ECS infrastructure including clusters, services, and tasks |
 | redis | Show elasticache redis clusters and nodes |
+
+## Options
+
+-a/--all-regions
+
+Show resources in all regions, rather than just the default
+
+-i/--all-instances
+
+Show all instances, rather than the default of only running instances
+
+-t/--total
+
+Show totals rather than individual resources
+
+-v
+
+Shows more details about resources, rather than just listening their names
 
 ## Authentication
 
