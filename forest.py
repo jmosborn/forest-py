@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import boto3
+from botocore.exceptions import ClientError
 import argparse
 
 def get_args():
 	description='A DevSecOps tool for cloud auditing and resource discovery'
 	parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
-	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis')
+	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis\ns3')
 	parser.add_argument('-v', dest='verbose', action='store_true', help='show more details for resources')
 	parser.add_argument('--all-regions', '-a', dest='all_regions', action='store_true', help='show all regions')
 	parser.add_argument('--all-instances', '-i', dest='all_instances', action='store_true', help='show all instances')
@@ -150,12 +151,43 @@ def get_ips(ec2):
 		print(region)
 		print_leaves(our_addresses)
 
+def get_s3(s3):
+	buckets = s3.list_buckets()
+	for bucket in buckets['Buckets']:
+		location = s3.get_bucket_location(Bucket=bucket['Name'])['LocationConstraint']
+		if not location:
+			location = "us-east-1"
+		encryption = "yes"
+		try:
+			e = s3.get_bucket_encryption(Bucket=bucket['Name'])
+		except ClientError as error:
+			if error.response['Error']['Code'] == 'ServerSideEncryptionConfigurationNotFoundError':
+				encryption = "no"
+		try:
+			ls = s3.get_bucket_lifecycle_configuration(Bucket=bucket['Name'])
+			lifecycle = len(ls['Rules'])
+		except ClientError as error:
+			if error.response['Error']['Code'] == 'NoSuchLifecycleConfiguration':
+				lifecycle = 0
+		v = s3.get_bucket_versioning(Bucket=bucket['Name'])
+		versioning = "Disabled"
+		mfadelete = "Disabled"
+		if v.get('Status'):
+			versioning = v['Status']
+		if v.get('MFADelete'):
+			mfadelete = v['MFADelete']
+		our_details = [bucket['Name'], f"({location})", f"encryption:{encryption}", f"lifecycle-policies:{lifecycle}", f"versioning:{versioning}", f"mfa-delete:{mfadelete}"]
+		our_bucket = ' '.join(our_details)
+		print_leaves(our_bucket, 0)
+
 def print_leaves(leaves, level = 1):
 	if leaves:
 		if level == 1:
 			spacing = '\t'
 		elif level == 2:
 			spacing = '\t\t'
+		elif level == 0:
+			spacing = '-'
 		else:
 			spacing = '\t\t\t'
 
@@ -235,3 +267,7 @@ elif args.layer == "ecs":
 		print(region)
 		ecs = boto3.client('ecs', region_name=region)
 		get_ecs_clusters(ecs)
+elif args.layer == "s3":
+	print_banner("S3")
+	s3 = boto3.client('s3', region_name='us-east-1')
+	get_s3(s3)

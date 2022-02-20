@@ -20,6 +20,7 @@ If an AWS infrastructure is a forest filled with trees, the forest layers are hi
 | lbs | Show load balancers, listeners, and target groups |
 | ecs | Show the ECS infrastructure including clusters, services, and tasks |
 | redis | Show elasticache redis clusters and nodes |
+| s3 | Show S3 buckets across regions |
 
 ## Options
 
