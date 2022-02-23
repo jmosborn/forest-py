@@ -7,11 +7,15 @@ import argparse
 def get_args():
 	description='A DevSecOps tool for cloud auditing and resource discovery'
 	parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
-	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis\ns3')
+	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis\ns3\niam')
 	parser.add_argument('-v', dest='verbose', action='store_true', help='show more details for resources')
 	parser.add_argument('--all-regions', '-a', dest='all_regions', action='store_true', help='show all regions')
 	parser.add_argument('--all-instances', '-i', dest='all_instances', action='store_true', help='show all instances')
 	parser.add_argument('--total', '-t', dest='total', action='store_true', help='only show totals, not details')
+	subparsers = parser.add_subparsers()
+	subparsers.dest = 'subcommand'
+	subparser = subparsers.add_parser("group", help="show IAM by group")
+	subparser = subparsers.add_parser("user", help="show IAM by user")
 	parser.set_defaults(verbose=False, all_regions=False, all_instances=False, total=False)
 
 	args = parser.parse_args()
@@ -180,6 +184,25 @@ def get_s3(s3):
 		our_bucket = ' '.join(our_details)
 		print_leaves(our_bucket, 0)
 
+def get_iam(iam):
+	if args.subcommand == 'group':
+		groups = iam.list_groups()
+		for group in groups['Groups']:
+			group_name = group['GroupName']
+			print_leaves(group_name)
+			members = iam.get_group(GroupName=group_name).get('Users')
+			for member in members:
+				if member.get('PasswordLastUsed'):
+					our_details = [member['UserName'], f"created:{str(member['CreateDate'])}", f"password-last-used:{str(member['PasswordLastUsed'])}"]
+				else:
+					our_details = [member['UserName'], f"created:{str(member['CreateDate'])}"]
+				print_leaves(' '.join(our_details), 2)
+	elif args.subcommand == 'user':
+		users = iam.list_users()
+		for user in users['Users']:
+			user_name = user['UserName']
+			print_leaves(user_name)
+
 def print_leaves(leaves, level = 1):
 	if leaves:
 		if level == 1:
@@ -271,3 +294,8 @@ elif args.layer == "s3":
 	print_banner("S3")
 	s3 = boto3.client('s3', region_name='us-east-1')
 	get_s3(s3)
+elif args.layer == "iam":
+	print_banner("IAM")
+	print("Global")
+	iam = boto3.client('iam', region_name='us-east-1')
+	get_iam(iam)
