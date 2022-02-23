@@ -185,6 +185,8 @@ def get_s3(s3):
 		print_leaves(our_bucket, 0)
 
 def get_iam(iam):
+	if not args.subcommand:
+		args.subcommand = 'group'
 	if args.subcommand == 'group':
 		groups = iam.list_groups()
 		for group in groups['Groups']:
