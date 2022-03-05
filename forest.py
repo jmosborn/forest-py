@@ -5,9 +5,9 @@ from botocore.exceptions import ClientError
 import argparse
 
 def get_args():
-	description='A DevSecOps tool for cloud auditing and resource discovery'
+	description='A read-only DevOps tool for cloud auditing and resource discovery'
 	parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
-	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis\ns3\niam')
+	parser.add_argument('layer', metavar='layer', help='The forest layer, or type of resource, to show:\n\nnetwork\ninstances\nips\nlbs\necs\nredis\ns3\niam\nrds')
 	parser.add_argument('-v', dest='verbose', action='store_true', help='show more details for resources')
 	parser.add_argument('--all-regions', '-a', dest='all_regions', action='store_true', help='show all regions')
 	parser.add_argument('--all-instances', '-i', dest='all_instances', action='store_true', help='show all instances')
@@ -205,6 +205,12 @@ def get_iam(iam):
 			user_name = user['UserName']
 			print_leaves(user_name)
 
+def get_rds(rds):
+	response = rds.describe_db_instances()
+	for db in response['DBInstances']:
+		our_details = [db['DBInstanceIdentifier'], db['DBInstanceClass'], db['Engine'], db['DBInstanceStatus']]
+		print_leaves(' '.join(our_details))
+
 def print_leaves(leaves, level = 1):
 	if leaves:
 		if level == 1:
@@ -301,3 +307,8 @@ elif args.layer == "iam":
 	print("Global")
 	iam = boto3.client('iam', region_name='us-east-1')
 	get_iam(iam)
+elif args.layer == "rds":
+	for region in our_regions:
+		print(region)
+		rds = boto3.client('rds')
+		get_rds(rds)

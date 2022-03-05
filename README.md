@@ -1,6 +1,6 @@
 # forest
 
-A read-only DevOps tools for AWS account auditing and resource discovery. Originally written in Go, I'm converting it to Python for various reasons. It just provides and quick way to list resources across zones and regions in an account, in order to see the larger picture of an AWS infrastructure, like seeing a birds-eye view of a forest in various layers.
+A read-only DevOps tool for AWS account auditing and resource discovery. It provides a quick way to list resources across zones and regions in an account, in order to see the larger picture of an AWS infrastructure, like seeing a birds-eye view of a forest in various layers.
 
 ## Usage
 
@@ -22,6 +22,7 @@ If an AWS infrastructure is a forest filled with trees, the forest layers are hi
 | redis | Show elasticache redis clusters and nodes |
 | s3 | Show S3 buckets across regions |
 | iam | Show IAM resources |
+| rds | Show RDS instances |
 
 ## Options
 
